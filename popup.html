@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Information Extractor</title>
+  <style>
+    body {
+      width: 400px;
+      padding: 15px;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .info-section {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .info-section h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .info-item {
+      margin: 5px 0;
+    }
+    .label {
+      font-weight: bold;
+      color: #666;
+    }
+    .value {
+      color: #333;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Product Information</h2>
+    <div class="info-section">
+      <h3>Product Details</h3>
+      <div class="info-item">
+        <span class="label">Name:</span>
+        <span class="value" id="productName">-</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Price:</span>
+        <span class="value" id="productPrice">-</span>
+      </div>
+    </div>
+    <div class="info-section">
+      <h3>Delivery Information</h3>
+      <div class="info-item">
+        <span class="label">Address:</span>
+        <span class="value" id="deliveryAddress">-</span>
+      </div>
+    </div>
+    <button id="extractButton">Extract Information</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html> 
