@@ -382,61 +382,39 @@ async function calculateTaxes(apiKey) {
     };
   }
 
-  function display_results(taxInfo, productInfo) {
+  function display_results(taxRate, taxAmount, totalAmount, productPrice, productName) {
     try {
-      // Handle undefined or null taxInfo
-      if (!taxInfo) {
-        console.error("Tax information is undefined or null");
-        return "Error: Tax information not available";
-      }
+      // Format the values for display
+      const formattedPrice = productPrice.startsWith('$') ? productPrice : `$${productPrice}`;
+      const rate = parseFloat(taxRate);
+      const amount = parseFloat(taxAmount);
+      const total = parseFloat(totalAmount);
 
-      // Parse product info if it's a string
-      let info;
-      if (typeof productInfo === 'string') {
-        try {
-          info = JSON.parse(productInfo);
-        } catch (parseError) {
-          console.error("Error parsing product info:", parseError);
-          info = {
-            ProductName: 'Unknown Product',
-            ProductPrice: '$0.00',
-            DeliveryAddress: 'Unknown Address'
-          };
-        }
-      } else {
-        info = productInfo || {
-          ProductName: 'Unknown Product',
-          ProductPrice: '$0.00',
-          DeliveryAddress: 'Unknown Address'
-        };
-      }
-      
-      // Create a combined result object
+      // Create the result object for the popup
       const results = {
-        ProductName: info.ProductName || 'Unknown Product',
-        ProductPrice: info.ProductPrice || '$0.00',
-        DeliveryAddress: info.DeliveryAddress || 'Unknown Address',
+        ProductName: productName,
+        ProductPrice: formattedPrice,
+        DeliveryAddress: '-', // Not needed for display
         taxInfo: {
-          rate: taxInfo.rate || 0,
-          amount: taxInfo.amount || 0,
-          total: taxInfo.total || 0
+          rate: rate,
+          amount: amount,
+          total: total
         }
       };
 
-      // Send message to popup to update the UI
+      // Send message to update the popup UI
       chrome.runtime.sendMessage({
         type: 'UPDATE_POPUP',
         data: results
       });
 
       // Return formatted string for logging
-      return `Tax Calculation Results:
-        Product: ${results.ProductName}
-        Price: ${results.ProductPrice}
-        Delivery Address: ${results.DeliveryAddress}
-        Tax Rate: ${((results.taxInfo.rate || 0) * 100).toFixed(1)}%
-        Tax Amount: $${((results.taxInfo.amount || 0)).toFixed(2)}
-        Total Amount: $${((results.taxInfo.total || 0)).toFixed(2)}`;
+      return `Tax calculation complete:
+        Product: ${productName}
+        Price: ${formattedPrice}
+        Tax Rate: ${(rate * 100).toFixed(1)}%
+        Tax Amount: $${amount.toFixed(2)}
+        Total Amount: $${total.toFixed(2)}`;
     } catch (error) {
       console.error("Error in display_results:", error);
       return "Error displaying results";
@@ -458,7 +436,7 @@ async function calculateTaxes(apiKey) {
     if (funcName in functionMap) {
       let functionParams;
       
-      // Handle comma-separated parameters for specific functions
+      // Handle parameters based on function name
       if (funcName === "calculate_tax" && typeof params === 'string') {
         functionParams = params.split(',').map(param => {
           // Convert string 'true'/'false' to boolean for isGrocery
@@ -468,6 +446,9 @@ async function calculateTaxes(apiKey) {
           const num = parseFloat(param);
           return isNaN(num) ? param.trim() : num;
         });
+      } else if (funcName === "display_results" && typeof params === 'string') {
+        // Split all parameters by comma and trim
+        functionParams = params.split(',').map(param => param.trim());
       } else {
         functionParams = [params];
       }
@@ -505,7 +486,7 @@ async function calculateTaxes(apiKey) {
     2. determine_product_type(ProductName) It determines if the product is a grocery item or not and returns a boolean isGrocery \n
     3. determine_delivery_location(DeliveryAddress) It determines the province from the delivery address and returns the Province \n
     4. calculate_tax(isGrocery, Province, ProductPrice) It calculates the tax amount based on the product type and province and returns an object with rate, amount, and total \n
-    5. display_results(taxInfo, ProductPrice, ProductName) It displays the tax calculation results and product information in the popup \n
+    5. display_results(taxRate, taxAmount, totalAmount, productPrice, productName) It displays the tax calculation results and product information in the popup \n
 
     DO NOT include multiple responses. Give ONE response at a time.`;
 
