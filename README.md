@@ -17,13 +17,38 @@ Only then would you see the final price including taxes. This plugin solves this
 
 This saves time and helps make informed purchasing decisions without the need to go through the checkout process.
 
+
+## Features
+
+- Extracts product information from web pages
+- Displays product name, price, description, and delivery address
+- Works on multiple e-commerce websites
+- Clean and user-friendly interface
+- Implements an agentic AI workflow for information processing
+
+## AI Workflow
+
+The extension implements a simple agentic AI workflow that follows this pattern:
+
+```
+Query1 → LLM Response → Tool Call:Tool Result → Query2 → LLM Response → Tool Call:Tool Result → Query3 → LLM Response → Result
+```
+
+Each query maintains context from all previous interactions, allowing the AI to build upon previous knowledge and responses. This creates a chain of thought process where:
+
+1. Initial query is made to the LLM
+2. LLM analyzes the request and determines necessary actions like calling a local javascript function
+3. Tools (javascript functions) are called based on LLM's decision
+4. Results are processed and fed back into the next query
+5. Process continues until final result is achieved
+
 ## How It Works
 
 The extension uses a combination of web scraping and AI to calculate taxes. Here's the process:
 
 1. **Information Extraction**:
    - `get_product_info()`: Orchestrates the entire process and calls other functions
-        - `findTitle()`: Extracts the product name from the page
+         - `findTitle()`: Extracts the product name from the page
         - `findPrice()`: Gets the product price from various possible locations
         - `findAddress()`: Retrieves the delivery address from the page
 
@@ -50,30 +75,6 @@ The extension uses a combination of web scraping and AI to calculate taxes. Here
    - Displays the applicable tax rate
    - Calculates and shows the tax amount
    - Presents the total price including taxes
-
-## Features
-
-- Extracts product information from web pages
-- Displays product name, price, description, and delivery address
-- Works on multiple e-commerce websites
-- Clean and user-friendly interface
-- Implements an agentic AI workflow for information processing
-
-## AI Workflow
-
-The extension implements a simple agentic AI workflow that follows this pattern:
-
-```
-Query1 → LLM Response → Tool Call:Tool Result → Query2 → LLM Response → Tool Call:Tool Result → Query3 → LLM Response → Result
-```
-
-Each query maintains context from all previous interactions, allowing the AI to build upon previous knowledge and responses. This creates a chain of thought process where:
-
-1. Initial query is made to the LLM
-2. LLM analyzes the request and determines necessary actions like calling a local javascript function
-3. Tools (javascript functions) are called based on LLM's decision
-4. Results are processed and fed back into the next query
-5. Process continues until final result is achieved
 
 ## Technology Stack
 
