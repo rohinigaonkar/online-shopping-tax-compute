@@ -1,74 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Product Information Extractor</title>
+  <title>Tax Calculator</title>
   <style>
     body {
       width: 400px;
-      padding: 15px;
+      padding: 20px;
       font-family: Arial, sans-serif;
     }
     .container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 15px;
     }
     .info-section {
-      border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 4px;
-    }
-    .info-section h3 {
-      margin: 0 0 10px 0;
-      color: #333;
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
     .info-item {
-      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
     }
     .label {
       font-weight: bold;
-      color: #666;
+      color: #333;
     }
     .value {
-      color: #333;
+      color: #666;
+    }
+    .tax-section {
+      background-color: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .total-section {
+      background-color: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: bold;
     }
     button {
       background-color: #4CAF50;
       color: white;
-      padding: 10px;
+      padding: 10px 20px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 10px;
+      font-size: 14px;
     }
     button:hover {
       background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #4CAF50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Product Information</h2>
+    <button id="extractButton">Calculate Tax</button>
+    <div class="loading" id="loadingIndicator"></div>
+    
     <div class="info-section">
-      <h3>Product Details</h3>
+      <h3>Product Information</h3>
       <div class="info-item">
-        <span class="label">Name:</span>
+        <span class="label">Product Name:</span>
         <span class="value" id="productName">-</span>
       </div>
       <div class="info-item">
         <span class="label">Price:</span>
         <span class="value" id="productPrice">-</span>
       </div>
-    </div>
-    <div class="info-section">
-      <h3>Delivery Information</h3>
       <div class="info-item">
-        <span class="label">Address:</span>
+        <span class="label">Delivery Address:</span>
         <span class="value" id="deliveryAddress">-</span>
       </div>
     </div>
-    <button id="extractButton">Extract Information</button>
+
+    <div class="tax-section">
+      <h3>Tax Information</h3>
+      <div class="info-item">
+        <span class="label">Tax Rate:</span>
+        <span class="value" id="taxRate">-</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Tax Amount:</span>
+        <span class="value" id="taxAmount">-</span>
+      </div>
+    </div>
+
+    <div class="total-section">
+      <div class="info-item">
+        <span class="label">Total Amount:</span>
+        <span class="value" id="totalAmount">-</span>
+      </div>
+    </div>
   </div>
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html> 

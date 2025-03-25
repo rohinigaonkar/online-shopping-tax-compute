@@ -1,0 +1,26 @@
+# Ignore config files with sensitive data
+config.js
+.env
+.env.local
+.env.*.local
+
+# Node modules
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+build/ 
