@@ -4,123 +4,180 @@
   <title>Tax Calculator</title>
   <style>
     body {
-      width: 400px;
-      padding: 20px;
-      font-family: Arial, sans-serif;
+      width: 350px;
+      padding: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      margin: 0;
+      background-color: #f8f9fa;
     }
+    
     .container {
       display: flex;
       flex-direction: column;
       gap: 15px;
-    }
-    .info-section {
-      background-color: #f5f5f5;
-      padding: 15px;
+      background-color: white;
       border-radius: 8px;
-      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 15px;
     }
-    .info-item {
+    
+    .calculate-btn {
+      background-color: #0d6efd;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    
+    .calculate-btn:hover {
+      background-color: #0b5ed7;
+    }
+    
+    .section {
+      padding: 12px;
+      border-radius: 6px;
+      background-color: #f8f9fa;
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #dee2e6;
     }
+    
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    
     .label {
-      font-weight: bold;
-      color: #333;
+      color: #6c757d;
+      font-size: 13px;
     }
+    
     .value {
-      color: #666;
+      font-weight: 500;
+      color: #212529;
+      font-size: 13px;
     }
-    .tax-section {
-      background-color: #e8f5e9;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 10px;
+    
+    .processing {
+      color: #0d6efd !important;
+      font-style: italic;
     }
+    
+    .error {
+      color: #dc3545 !important;
+      font-weight: 500;
+    }
+    
     .total-section {
-      background-color: #e3f2fd;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-weight: bold;
+      background-color: #e9ecef;
+      margin-top: 5px;
     }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+    
+    .total-section .info-row {
+      border-bottom: none;
+    }
+    
+    .total-section .label,
+    .total-section .value {
       font-size: 14px;
+      font-weight: 600;
+      color: #212529;
     }
-    button:hover {
-      background-color: #45a049;
+
+    /* Animation for loading state */
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
     }
-    button:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
+
+    .processing {
+      animation: pulse 1.5s infinite;
     }
-    .loading {
-      display: none;
-      text-align: center;
-      margin: 10px 0;
+
+    /* Hover effects for better interactivity */
+    .info-row:hover {
+      background-color: rgba(13, 110, 253, 0.05);
+      transition: background-color 0.2s;
     }
-    .loading::after {
-      content: '';
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #4CAF50;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+
+    .total-section .info-row:hover {
+      background-color: rgba(33, 37, 41, 0.05);
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+
+    /* Responsive text for long product names */
+    #productName {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Add subtle transitions */
+    .value {
+      transition: color 0.3s, opacity 0.3s;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <button id="extractButton">Calculate Tax</button>
-    <div class="loading" id="loadingIndicator"></div>
+    <button id="extractButton" class="calculate-btn">Calculate Tax</button>
     
-    <div class="info-section">
-      <h3>Product Information</h3>
-      <div class="info-item">
-        <span class="label">Product Name:</span>
+    <div class="section">
+      <div class="section-title">Product Details</div>
+      <div class="info-row">
+        <span class="label">Name</span>
         <span class="value" id="productName">-</span>
       </div>
-      <div class="info-item">
-        <span class="label">Price:</span>
+      <div class="info-row">
+        <span class="label">Price</span>
         <span class="value" id="productPrice">-</span>
       </div>
-      <div class="info-item">
-        <span class="label">Delivery Address:</span>
+      <div class="info-row">
+        <span class="label">Delivery To</span>
         <span class="value" id="deliveryAddress">-</span>
       </div>
     </div>
-
-    <div class="tax-section">
-      <h3>Tax Information</h3>
-      <div class="info-item">
-        <span class="label">Tax Rate:</span>
+    
+    <div class="section">
+      <div class="section-title">Tax Details</div>
+      <div class="info-row">
+        <span class="label">Rate</span>
         <span class="value" id="taxRate">-</span>
       </div>
-      <div class="info-item">
-        <span class="label">Tax Amount:</span>
+      <div class="info-row">
+        <span class="label">Amount</span>
         <span class="value" id="taxAmount">-</span>
       </div>
     </div>
-
-    <div class="total-section">
-      <div class="info-item">
-        <span class="label">Total Amount:</span>
+    
+    <div class="section total-section">
+      <div class="info-row">
+        <span class="label">Total Amount</span>
         <span class="value" id="totalAmount">-</span>
       </div>
     </div>
   </div>
+  
   <script type="module" src="popup.js"></script>
 </body>
 </html> 

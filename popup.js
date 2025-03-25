@@ -6,8 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Listen for messages from the content script
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'UPDATE_POPUP') {
-      updatePopup(message.data);
+    if (message.type === 'UPDATE_PRODUCT_DISPLAY') {
+      updateProductDisplay(message.data);
+    } else if (message.type === 'UPDATE_TAX_DISPLAY') {
+      updateTaxDisplay(message.data);
+    } else if (message.type === 'SET_ERROR_STATE') {
+      setErrorState();
     }
   });
   
@@ -15,14 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       // Show loading state
       updatePopup({
-        ProductName: 'Calculating taxes...',
-        ProductPrice: 'Please wait',
+        ProductName: 'Processing...',
+        ProductPrice: 'Processing...',
         DeliveryAddress: 'Processing...',
-        taxInfo: {
-          rate: 0,
-          amount: 0,
-          total: 0
-        }
+        taxInfo: null
       });
 
       // Get the active tab
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
       console.error('Error:', error);
       updatePopup({
-        ProductName: 'Error: Extension error',
+        ProductName: 'Error occurred',
         ProductPrice: '-',
         DeliveryAddress: '-',
         taxInfo: {
@@ -67,20 +67,78 @@ function updatePopup(productInfo) {
       info = productInfo;
     }
 
-    // Update product information
-    document.getElementById('productName').textContent = info.ProductName || info.name || '-';
-    document.getElementById('productPrice').textContent = info.ProductPrice || info.price || '-';
-    document.getElementById('deliveryAddress').textContent = info.DeliveryAddress || info.address || '-';
+    // Update product information section
+    updateProductDisplay(info);
 
-    // Update tax information if available
+    // Update tax information section
     if (info.taxInfo) {
-      document.getElementById('taxRate').textContent = `${((info.taxInfo.rate || 0) * 100).toFixed(1)}%`;
-      document.getElementById('taxAmount').textContent = `$${((info.taxInfo.amount || 0)).toFixed(2)}`;
-      document.getElementById('totalAmount').textContent = `$${((info.taxInfo.total || 0)).toFixed(2)}`;
+      updateTaxDisplay(info.taxInfo);
+    } else {
+      setLoadingState();
     }
   } catch (error) {
     console.error("Error updating popup:", error);
+    setErrorState();
   }
+}
+
+function updateProductDisplay(info) {
+  document.getElementById('productName').textContent = info.ProductName || 'Processing...';
+  document.getElementById('productPrice').textContent = info.ProductPrice || 'Processing...';
+  document.getElementById('deliveryAddress').textContent = info.DeliveryAddress || 'Processing...';
+}
+
+function updateTaxDisplay(taxInfo) {
+  try {
+    // Format tax rate with percentage
+    const formattedRate = `${((taxInfo.rate || 0) * 100).toFixed(1)}%`;
+    document.getElementById('taxRate').textContent = formattedRate;
+
+    // Format monetary values with currency symbol and 2 decimal places
+    const formattedAmount = `$${(taxInfo.amount || 0).toFixed(2)}`;
+    document.getElementById('taxAmount').textContent = formattedAmount;
+
+    const formattedTotal = `$${(taxInfo.total || 0).toFixed(2)}`;
+    document.getElementById('totalAmount').textContent = formattedTotal;
+
+    // Remove any loading or error states
+    removeLoadingState();
+  } catch (error) {
+    console.error("Error updating tax display:", error);
+    setErrorState();
+  }
+}
+
+function setLoadingState() {
+  const loadingText = 'Processing...';
+  document.getElementById('taxRate').textContent = loadingText;
+  document.getElementById('taxAmount').textContent = loadingText;
+  document.getElementById('totalAmount').textContent = loadingText;
+
+  // Add loading class for styling
+  ['taxRate', 'taxAmount', 'totalAmount'].forEach(id => {
+    document.getElementById(id).classList.add('processing');
+  });
+}
+
+function setErrorState() {
+  const errorText = 'Error';
+  document.getElementById('taxRate').textContent = errorText;
+  document.getElementById('taxAmount').textContent = errorText;
+  document.getElementById('totalAmount').textContent = errorText;
+
+  // Add error class for styling
+  ['taxRate', 'taxAmount', 'totalAmount'].forEach(id => {
+    document.getElementById(id).classList.add('error');
+  });
+}
+
+function removeLoadingState() {
+  // Remove loading and error classes
+  ['taxRate', 'taxAmount', 'totalAmount'].forEach(id => {
+    const element = document.getElementById(id);
+    element.classList.remove('processing', 'error');
+  });
 }
 
 async function calculateTaxes(apiKey) {
@@ -344,11 +402,7 @@ async function calculateTaxes(apiKey) {
     // Handle undefined or null productPrice
     if (!productPrice) {
       console.error("Product price is undefined or null");
-      return {
-        rate: rate,
-        amount: 0,
-        total: 0
-      };
+      return `${rate},0,0`;
     }
 
     // Extract numeric price value
@@ -357,44 +411,58 @@ async function calculateTaxes(apiKey) {
     // Handle invalid price
     if (isNaN(numericPrice)) {
       console.error("Invalid product price:", productPrice);
-      return {
-        rate: rate,
-        amount: 0,
-        total: 0
-      };
+      return `${rate},0,0`;
     }
     
     // Calculate tax amount
     const taxAmount = numericPrice * rate;
     
     // Log the tax calculation details for debugging
-    console.log(`Tax Calculation:
-      Province: ${province}
-      Is Grocery: ${isGrocery}
-      Tax Rate: ${(rate * 100).toFixed(1)}%
-      Product Price: $${numericPrice.toFixed(2)}
-      Tax Amount: $${taxAmount.toFixed(2)}`);
+    //console.log(`Tax Calculation:
+    //  Province: ${province}
+    //  Is Grocery: ${isGrocery}
+    //  Tax Rate: ${(rate * 100).toFixed(1)}%
+    //  Product Price: $${numericPrice.toFixed(2)}
+    //  Tax Amount: $${taxAmount.toFixed(2)}`);
     
-    return {
-      rate: rate,
-      amount: taxAmount,
-      total: numericPrice + taxAmount
-    };
+    // Return comma-separated string values: rate,taxAmount,total
+    return `${rate},${taxAmount},${numericPrice + taxAmount}`;
+  }
+
+  // Define UI update functions in the content script context
+  function updateProductDisplay(info) {
+    chrome.runtime.sendMessage({
+      type: 'UPDATE_PRODUCT_DISPLAY',
+      data: info
+    });
+  }
+
+  function updateTaxDisplay(taxInfo) {
+    chrome.runtime.sendMessage({
+      type: 'UPDATE_TAX_DISPLAY',
+      data: taxInfo
+    });
+  }
+
+  function setErrorState() {
+    chrome.runtime.sendMessage({
+      type: 'SET_ERROR_STATE'
+    });
   }
 
   function display_results(taxRate, taxAmount, totalAmount, productPrice, productName) {
     try {
       // Format the values for display
-      const formattedPrice = productPrice.startsWith('$') ? productPrice : `$${productPrice}`;
+      const formattedPrice = productPrice ? (productPrice.startsWith('$') ? productPrice : `$${productPrice}`) : 'N/A';
       const rate = parseFloat(taxRate);
       const amount = parseFloat(taxAmount);
       const total = parseFloat(totalAmount);
 
       // Create the result object for the popup
       const results = {
-        ProductName: productName,
+        ProductName: productName || 'N/A',
         ProductPrice: formattedPrice,
-        DeliveryAddress: '-', // Not needed for display
+        DeliveryAddress: 'N/A', // Not needed for final display
         taxInfo: {
           rate: rate,
           amount: amount,
@@ -402,21 +470,24 @@ async function calculateTaxes(apiKey) {
         }
       };
 
-      // Send message to update the popup UI
-      chrome.runtime.sendMessage({
-        type: 'UPDATE_POPUP',
-        data: results
-      });
+      // Update UI using the content script functions
+      updateProductDisplay(results);
+      updateTaxDisplay(results.taxInfo);
 
       // Return formatted string for logging
       return `Tax calculation complete:
-        Product: ${productName}
-        Price: ${formattedPrice}
-        Tax Rate: ${(rate * 100).toFixed(1)}%
-        Tax Amount: $${amount.toFixed(2)}
+        Product Information:
+        - Name: ${productName || 'N/A'}
+        - Price: ${formattedPrice}
+        
+        Tax Information:
+        - Rate: ${(rate * 100).toFixed(1)}%
+        - Amount: $${amount.toFixed(2)}
+        
         Total Amount: $${total.toFixed(2)}`;
     } catch (error) {
       console.error("Error in display_results:", error);
+      setErrorState();
       return "Error displaying results";
     }
   }
@@ -446,9 +517,9 @@ async function calculateTaxes(apiKey) {
           const num = parseFloat(param);
           return isNaN(num) ? param.trim() : num;
         });
-      } else if (funcName === "display_results" && typeof params === 'string') {
-        // Split all parameters by comma and trim
-        functionParams = params.split(',').map(param => param.trim());
+      } else if (funcName === "display_results") {
+        // For display_results, keep parameters as simple string values
+        functionParams = typeof params === 'string' ? params.split(',').map(param => param.trim()) : [params];
       } else {
         functionParams = [params];
       }
@@ -484,15 +555,15 @@ async function calculateTaxes(apiKey) {
     where javascript_function_name is the name of the following: \n
     1. get_product_info It gets the active tab, extracts information from the page and returns ProductName, DeliveryAddress, and ProductPrice  \n
     2. determine_product_type(ProductName) It determines if the product is a grocery item or not and returns a boolean isGrocery \n
-    3. determine_delivery_location(DeliveryAddress) It determines the province from the delivery address and returns the Province \n
+    3. determine_delivery_location(DeliveryAddress) It takes the delivery address as input and returns the Province \n
     4. calculate_tax(isGrocery, Province, ProductPrice) It calculates the tax amount based on the product type and province and returns an object with rate, amount, and total \n
-    5. display_results(taxRate, taxAmount, totalAmount, productPrice, productName) It displays the tax calculation results and product information in the popup \n
+    5. display_results(taxRate, taxAmount, totalAmount, productPrice, productName) It updates the product information and tax calculation results in the Chrome extension popup user interface for the end user \n
 
     DO NOT include multiple responses. Give ONE response at a time.`;
 
-    let current_query = "I have an ecommerce product web page opened, help me calculate estimated taxes on this product.";
+    let current_query = "I have an ecommerce product web page opened, help me calculate estimated taxes on this product and display the results in the Chrome extension popup user interface for the end user.";
     let iteration = 0;
-    const maxIterations = 5; 
+    const maxIterations = 6; 
     let lastResponse = null;
     let iterationResponse = [];
     let iterationResult = null;
@@ -500,15 +571,15 @@ async function calculateTaxes(apiKey) {
     let lastParams = null;
 
     while (iteration < maxIterations) {
-      console.log(`\n--- Iteration ${iteration + 1} ---`);
+      console.log(`\n --- Iteration ${iteration + 1} ---`);
       
       if (lastResponse === null) {
         current_query = current_query + "  What should I do next?";
-        console.log(current_query);
+        //console.log(current_query);
       } else {
         current_query = current_query + "\n\n" + iterationResponse.join(" ");
         current_query = current_query + "  What should I do next?";
-        console.log(current_query);
+        //console.log(current_query);
       }
 
       const prompt = `${system_prompt} Query: ${current_query}`;
@@ -535,7 +606,7 @@ async function calculateTaxes(apiKey) {
       if (responseText.startsWith("1. FUNCTION_CALL:")) {
         const [, functionInfo] = responseText.split(":", 2);
         const [funcName, params] = functionInfo.split("|", 2).map(x => x.trim());
-        console.log("Function name:", funcName);
+        //console.log("Function name:", funcName);
         lastFunctionName = funcName;
         lastParams = params;
         iterationResult = await functionCaller(funcName, params);
@@ -561,25 +632,27 @@ async function calculateTaxes(apiKey) {
       try {
         let finalResult;
         if (typeof lastParams === 'string') {
-          finalResult = JSON.parse(lastParams);
+          // Parse the comma-separated values from display_results
+          const [taxRate, taxAmount, totalAmount, productPrice, productName] = lastParams.split(',').map(param => param.trim());
+          
+          finalResult = {
+            ProductName: productName || 'N/A',
+            ProductPrice: productPrice ? (productPrice.startsWith('$') ? productPrice : `$${productPrice}`) : 'N/A',
+            DeliveryAddress: 'N/A',
+            taxInfo: {
+              rate: parseFloat(taxRate),
+              amount: parseFloat(taxAmount),
+              total: parseFloat(totalAmount)
+            }
+          };
         } else {
           finalResult = lastParams;
         }
         
-        if (iterationResult && typeof iterationResult === 'object') {
-          finalResult.taxInfo = iterationResult;
-        } else if (typeof iterationResult === 'string') {
-          try {
-            finalResult.taxInfo = JSON.parse(iterationResult);
-          } catch (error) {
-            console.error("Error parsing iteration result:", error);
-          }
-        }
-        
-        console.log("Updating popup with final result:", finalResult);
-        updatePopup(finalResult);
+        console.log("Final result:", finalResult);
+        // No need to call updatePopup here since we're already sending messages
       } catch (error) {
-        console.error("Error updating popup with final results:", error);
+        console.error("Error processing final results:", error);
       }
     }
   } catch (error) {
