@@ -690,7 +690,7 @@ async function calculateTaxes(apiKey) {
           finalResult = lastParams;
         }
         
-        console.log("Final result:", finalResult);
+        //console.log("Final result:", finalResult);
         console.log("\n=== Agent Execution Complete ===");
         // No need to call updatePopup here since we're already sending messages
       } catch (error) {
