@@ -649,10 +649,12 @@ async function calculateTaxes(apiKey) {
         lastFunctionName = funcName;
         lastParams = params;
         iterationResult = await functionCaller(funcName, params);
-      } else if (responseText.startsWith("FINAL_ANSWER:")) {
-        console.log("\n=== Agent Execution Complete ===");
-        break;
-      }
+      } 
+      
+      //else if (responseText.startsWith("FINAL_ANSWER:")) {
+      //  console.log("\n=== Agent Execution Complete ===");
+      //  break;
+      //}
 
       console.log(`Result: ${iterationResult}`);
       lastResponse = iterationResult;
@@ -689,6 +691,7 @@ async function calculateTaxes(apiKey) {
         }
         
         console.log("Final result:", finalResult);
+        console.log("\n=== Agent Execution Complete ===");
         // No need to call updatePopup here since we're already sending messages
       } catch (error) {
         console.error("Error processing final results:", error);
