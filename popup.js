@@ -220,7 +220,7 @@ async function calculateTaxes(apiKey) {
       const locationElement = document.querySelector('#nav-global-location-slot');
       if (locationElement) {
         const address = locationElement.textContent.trim();
-        console.log("Found address in location slot:", address);
+        //console.log("Found address in location slot:", address);
         return address;
       }
 
@@ -243,7 +243,7 @@ async function calculateTaxes(apiKey) {
         if (element) {
           const text = element.textContent.trim();
           if (text && text.length > 0) {
-            console.log("Found address using selector:", selector, ":", text);
+            //console.log("Found address using selector:", selector, ":", text);
             return text;
           }
         }
@@ -259,11 +259,11 @@ async function calculateTaxes(apiKey) {
       
       if (postalCodeMatch || provinceMatch) {
         const address = `${postalCodeMatch ? postalCodeMatch[0] : ''} ${provinceMatch ? provinceMatch[0] : ''}`.trim();
-        console.log("Found address from postal code/province:", address);
+        //console.log("Found address from postal code/province:", address);
         return address;
       }
 
-      console.log("No address found in the page");
+      //console.log("No address found in the page");
       return null;
     }
 
@@ -274,7 +274,7 @@ async function calculateTaxes(apiKey) {
     };
 
     // Log the extracted information for debugging
-    console.log('Extracted Product Information:', productInfo);
+    //console.log('Extracted Product Information:', productInfo);
     
     // Return a string representation of the object for better visibility
     return JSON.stringify(productInfo);
@@ -303,7 +303,7 @@ async function calculateTaxes(apiKey) {
         return 'Unknown';
       }
 
-      console.log("Processing address:", address);
+      //console.log("Processing address:", address);
 
       // Call Gemini API to determine province
       const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
@@ -328,7 +328,7 @@ async function calculateTaxes(apiKey) {
       const data = await response.json();
       const provinceCode = data.candidates[0].content.parts[0].text.trim();
       
-      console.log("Determined province code:", provinceCode);
+      //console.log("Determined province code:", provinceCode);
       
       // Validate the province code
       const validProvinces = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'YT', 'NT', 'NU'];
@@ -378,11 +378,11 @@ async function calculateTaxes(apiKey) {
         })
       });
 
-      console.log(`Prompt "${prompt}"`);
+      //console.log(`Prompt "${prompt}"`);
 
       const data = await response.json();
       const result = data.candidates[0].content.parts[0].text.trim().toLowerCase() === 'true';
-      console.log(`Product type determination for "${productName}", is Grocery?: ${result}`);
+      //console.log(`Product type determination for "${productName}", is Grocery?: ${result}`);
       return result;
 
     } catch (error) {
@@ -393,12 +393,12 @@ async function calculateTaxes(apiKey) {
 
   function calculate_tax(isGrocery, province, productPrice) {
     // Add detailed logging of input parameters
-    console.log("calculate_tax received parameters:", {
-      isGrocery,
-      isGroceryType: typeof isGrocery,
-      province,
-      productPrice
-    });
+    //console.log("calculate_tax received parameters:", {
+    //  isGrocery,
+    //  isGroceryType: typeof isGrocery,
+    //  province,
+    //  productPrice
+    //});
 
     // Tax rates for different provinces and territories
     const taxRates = {
@@ -430,14 +430,14 @@ async function calculateTaxes(apiKey) {
     const rate = provinceRates[isGrocery ? 'grocery' : 'nonGrocery'];
     
     // Add logging for rate selection
-    console.log("Rate selection:", {
-      province,
-      isGrocery,
-      selectedRate: rate,
-      availableRates: taxRates[province]
-    });
+    //console.log("Rate selection:", {
+    //  province,
+    //  isGrocery,
+    //  selectedRate: rate,
+    //  availableRates: taxRates[province]
+    //});
 
-    console.log(`Tax rate for ${province}, ${isGrocery ? 'Grocery' : 'Non-Grocery'}: ${rate}`);
+    //console.log(`Tax rate for ${province}, ${isGrocery ? 'Grocery' : 'Non-Grocery'}: ${rate}`);
     
     // Handle undefined or null productPrice
     if (!productPrice) {
@@ -535,7 +535,7 @@ async function calculateTaxes(apiKey) {
 
   // Function to call functions from the map
   async function functionCaller(funcName, params) {
-    console.log("Calling function:", funcName, "with params:", params);
+    //console.log("Calling function:", funcName, "with params:", params);
     if (funcName in functionMap) {
       let functionParams;
       
@@ -550,7 +550,7 @@ async function calculateTaxes(apiKey) {
           const num = parseFloat(trimmedParam);
           return isNaN(num) ? trimmedParam : num;
         });
-        console.log("Processed calculate_tax parameters:", functionParams);
+        //console.log("Processed calculate_tax parameters:", functionParams);
       } else if (funcName === "display_results") {
         // For display_results, keep parameters as simple string values
         functionParams = typeof params === 'string' ? params.split(',').map(param => param.trim()) : [params];
@@ -565,7 +565,7 @@ async function calculateTaxes(apiKey) {
       if (funcName === "get_product_info") {
         try {
           const productInfo = JSON.parse(result);
-          console.log("Parsed product info:", productInfo);
+          //console.log("Parsed product info:", productInfo);
           return result;
         } catch (error) {
           console.error("Error parsing product info:", error);
@@ -579,6 +579,8 @@ async function calculateTaxes(apiKey) {
     }
   }
 
+  
+
   try {
     const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     
@@ -590,9 +592,9 @@ async function calculateTaxes(apiKey) {
     2. determine_product_type(ProductName) It determines if the product is a grocery item or not and returns a boolean isGrocery \n
     3. determine_delivery_location(DeliveryAddress) It takes the delivery address as input and returns the Province code only. Only call this function, do not try to infer the province from the address.\n
     4. calculate_tax(isGrocery, Province, ProductPrice) It calculates the tax amount based on the product type and province and returns an object with rate, amount, and total \n
-    5. display_results(taxRate, taxAmount, totalAmount, productPrice, productName) It updates the product information and tax calculation results in the Chrome extension popup user interface for the end user \n
+    5. display_results(TaxRate, TaxAmount, TotalAmount, ProductPrice, ProductName) It updates the product information and tax calculation results in the Chrome extension popup user interface for the end user \n
 
-    DO NOT include multiple responses. Give ONE response at a time.`;
+    DO NOT include multiple responses. Give ONE response at a time. Send input in the correct order of the function parameters and in the correct format.`;
 
     let current_query = "I have an ecommerce product web page opened, help me calculate estimated taxes on this product and display the results in the Chrome extension popup user interface for the end user.";
     let iteration = 0;
@@ -602,6 +604,8 @@ async function calculateTaxes(apiKey) {
     let iterationResult = null;
     let lastFunctionName = null;
     let lastParams = null;
+
+    //console.log(system_prompt);
 
     while (iteration < maxIterations) {
       console.log(`\n --- Iteration ${iteration + 1} ---`);
@@ -614,6 +618,8 @@ async function calculateTaxes(apiKey) {
         current_query = current_query + "  What should I do next?";
         //console.log(current_query);
       }
+
+      //console.log(current_query);
 
       const prompt = `${system_prompt} Query: ${current_query}`;
       //console.log(prompt);
